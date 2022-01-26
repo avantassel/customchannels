@@ -1,0 +1,30 @@
+{
+  "channels": [{
+    "id": "stream",
+    "title": "Stream",
+    "description": "CustomChannels Stream",
+    "playlists": [{
+      "url": "https://stream.customchannels.net/dev_test_96.mp3",
+      "format": "mp3",
+      "quality": "highest"
+    }]
+  }, {
+    "id": "current",
+    "title": "Now Playing",
+    "description": "CustomChannels Now Playing",
+    "playlists": [{
+      "url": "https://lambda.customchannels.rocks/nowplaying?url=http://stream.customchannels.net/dev_test_96.mp3",
+      "format": "mp3",
+      "quality": "highest"
+    }]
+  }, {
+    "id": "recent",
+    "title": "Recent",
+    "description": "CustomChannels Recently Played",
+    "playlists": [{
+      "url": "https://ensemble.customchannels.net/api/channels/222/recent",
+      "format": "mp3",
+      "quality": "highest"
+    }]
+  }]
+}

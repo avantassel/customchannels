@@ -57,8 +57,24 @@ should meet the following requirements:
 https://stream.customchannels.net/dev_test_96.mp3
 
 **Currently Playing Metadata:**
-https://lambda.customchannels.rocks/nowplaying?url=http://stream.customchannels.net/dev_tes
-t_96.mp3
+https://lambda.customchannels.rocks/nowplaying?url=http://stream.customchannels.net/dev_test_96.mp3
 
 **Recently Played Metadata:**
 https://ensemble.customchannels.net/api/channels/222/recent
+
+> Application details below for MacOS
+
+1. Forked and modified from https://github.com/rockymadden/somafm-cli
+
+    Install MPV https://mpv.io/installation
+
+    ```sh
+    # install pre-requisites
+    brew install jq mpv coreutils
+
+    # build and run
+    ./run.sh
+
+    # run
+    ./build/bin/cmusic
+    ```
