@@ -64,7 +64,9 @@ https://ensemble.customchannels.net/api/channels/222/recent
 
 > Application details below.
 
-1. Simple PHP app
+- Code: https://github.com/avantassel/customchannels
+- App: https://www.andrewvantassel.com/customchannels
+- Run locally
 
     ```sh
     cd src
