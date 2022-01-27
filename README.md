@@ -62,19 +62,13 @@ https://lambda.customchannels.rocks/nowplaying?url=http://stream.customchannels.
 **Recently Played Metadata:**
 https://ensemble.customchannels.net/api/channels/222/recent
 
-> Application details below for MacOS
+> Application details below.
 
-1. Forked and modified from https://github.com/rockymadden/somafm-cli
-
-    Install MPV https://mpv.io/installation
+1. Simple PHP app
 
     ```sh
-    # install pre-requisites
-    brew install jq mpv coreutils
-
-    # build and run
-    ./run.sh
-
-    # run
-    ./build/bin/cmusic
+    cd src
+    php -S 127.0.0.1:8089
     ```
+    
+![DarkMode Screenshot](screenshot.png)
