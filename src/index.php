@@ -6,14 +6,14 @@
   </head>
   <body class="inverted">
     
-  <div class="ui placeholder segment sticky inverted">   
-  <button class="ui icon button inverted" onclick="toggleMode();">
+  <div class="ui placeholder stacked segment sticky inverted">   
+  <button class="ui icon button inverted" onclick="toggleMode();" data-content="Toggle Dark Mode">
     <i class="adjust icon large"></i>
   </button>
   <div class="ui active dimmer">
     <div class="ui text loader">Loading</div>
   </div>
-  <div class="ui two column stackable center aligned grid">  
+  <div class="ui two column center aligned grid">  
     <div class="middle aligned row">
       <div class="column">
         <div class="ui icon header inverted">
@@ -28,28 +28,18 @@
   <div class="column">
   <!-- Now Playing -->
   <div id="nowplaying" class="ui centered card inverted">
-  <div class="content">
-    <div class="header inverted">Now Playing</div>
-  </div>
-    <div class="content" style="display: none;">
-      <img id="image" class="right floated mini ui image" src="">
+    <div class="content">
+      <div class="header inverted">Now Playing</div>
+    </div>
+    <div class="content">
+      <img id="image" class="right floated mini ui image" src="" style="display: none;">
       <div id="title" class="header inverted" style="text-align: left">        
       </div>
       <div id="artist" class="meta" style="text-align: left">        
       </div>
       <div id="album" class="description" style="text-align: left">        
       </div>
-    </div> 
-    <div class="extra content" style="display: none;">
-      <span class="left floated like">
-        <i class="like icon"></i>
-        Like
-      </span>
-      <span class="right floated star">
-        <i class="star icon"></i>
-        Favorite
-      </span>
-    </div>   
+    </div>      
   </div>
   </div>
 </div>
@@ -68,6 +58,7 @@
   let recentlyPlayed = [];
   let recentlyPlayedPagination = {};
   let darkMode = true;
+  let gettingRecent = false;
   let nowPlaying = {
     sample: false    
   };
@@ -80,16 +71,18 @@
     }
   });
   audio.addEventListener('pause', (event) => {
-    clearPlayButtons();
+    clearPlayButtons();    
     if(!nowPlaying.sample)
       $('#mainPlayBtn').html( $('#mainPlayBtn').html().replace('Pause','Play') );        
   });  
   audio.addEventListener('play', (event) => {
     if(!nowPlaying.sample)
-      $('#mainPlayBtn').html( $('#mainPlayBtn').html().replace('Play','Pause') );
+      $('#mainPlayBtn').html( $('#mainPlayBtn').html().replace('Play','Pause') );    
   });
   
   $('.ui.sticky').sticky();
+  
+  $('.button').popup();
   
   function toggleMode(ele){
     darkMode = !darkMode;
@@ -114,30 +107,36 @@
     $('.sample').removeClass('red').removeClass('stop').addClass('play');
   }
   
-  function playStream(ele, url){
-    clearPlayButtons();    
-    if(audio.paused || nowPlaying.sample){          
-      $('#player').prop('src', url);
-      audio.play();
-      $('body').toast({
-        message: `<label class="ui blue label">Live</label> Playing stream`,
-        class: darkMode ? 'inverted' : ''
-      });          
-      fetch('https://lambda.customchannels.rocks/nowplaying?url=http://stream.customchannels.net/dev_test_96.mp3')
+  function getNowPlaying(){
+    fetch('https://lambda.customchannels.rocks/nowplaying?url=http://stream.customchannels.net/dev_test_96.mp3')
       .then((response) => response.json())
       .then((data) => {
         if(data.track){
           // parse track data
-          let track = data.track.split('-')
-          nowPlaying = {
-            id: '',
-            artist: track[0].trim(),
-            title: track[1].trim(),
-            album: '',
-          };  
-          updateNowPlaying(false);                          
+          let track = data.track.split('-');
+          if(!nowPlaying.artist || (nowPlaying.artist != track[0].trim() && nowPlaying.title != track[1].trim())){
+            // don't update if we are playing samples
+            if(nowPlaying.sample && !audio.paused)
+              return;
+            nowPlaying = {
+              id: '',
+              artist: track[0].trim(),
+              title: track[1].trim(),
+              album: '',
+            };  
+          }
+          updateNowPlaying(false);            
         }
-      });          
+      });  
+  }
+  
+  function playStream(ele, url){
+    clearPlayButtons();    
+    if(audio.paused || nowPlaying.sample){          
+      $('#player').prop('src', url);
+      audio.play();          
+      nowPlaying.sample = false;    
+      getNowPlaying();        
     } else {
       audio.pause();
       $('body').toast({
@@ -166,11 +165,18 @@
   }
   
   function updateNowPlaying(sample){
-    if(nowPlaying.title)
-      $('#nowplaying .content').show();
-    else
-      $('#nowplaying .content').hide();
+    if(audio.paused){
+      $('#nowplaying #artist').html('');
+      $('#nowplaying #title').html('');
+      $('#nowplaying #album').html('');
+      $('#nowplaying #image').hide();
+      return;
+    }
+    if(nowPlaying.title){
+      $('#nowplaying').addClass('loading');
+    }
     
+    let showToast = true;
     nowPlaying.sample = sample;
       
     // search for artist in recent list
@@ -180,28 +186,44 @@
         recent = recentlyPlayed.filter(r => r.title == nowPlaying.title);
       if(!recent.length)
         recent = recentlyPlayed.filter(r => r.artist == nowPlaying.artist);
+        
       if(recent.length){
-        nowPlaying = {
-          sample,
-          ...recent[0]
-        };
+        if(nowPlaying.id != recent[0].id){
+          nowPlaying = {
+            sample,
+            ...recent[0]
+          };  
+        } else {
+          return;
+        }
       }
     }
     $('#nowplaying #artist').html(nowPlaying.artist);
     $('#nowplaying #title').html(nowPlaying.title);
     $('#nowplaying #album').html(nowPlaying.album);
-    $('#nowplaying #image').prop('src', nowPlaying.album_art.small);    
-    $('body').toast({
-      message: `<label class="ui green label">Sample</label> Playing ${nowPlaying.title} by ${nowPlaying.artist}`,
-      class: darkMode ? 'inverted' : ''
-    });    
+    if(nowPlaying.album_art && nowPlaying.album_art.small)
+      $('#nowplaying #image').prop('src', nowPlaying.album_art.small).show();    
+    else
+      $('#nowplaying #image').hide();
+    let message = sample ? '<label class="ui green label">Sample</label>' : '<label class="ui blue label">Live</label>';    
+    if(showToast && nowPlaying.title){
+      $('body').toast({
+        message: `${message} Playing ${nowPlaying.title} by ${nowPlaying.artist}`,
+        class: darkMode ? 'inverted' : ''
+      });          
+    }
+    $('#nowplaying').removeClass('loading');
   }
   
   function updateRecentlyPlayed(data){
+    let init = !recentlyPlayed.length;
     data.map(d => {
       if(!$('#recent #'+d.id).length){
         recentlyPlayed.push(d);
-        $('#recent').append(cardHtml(d));
+        if(init)
+          $('#recent').append(cardHtml(d));
+        else
+          $('#recent').prepend(cardHtml(d));
       }
     });
     $('.dimmer').hide();
@@ -231,11 +253,23 @@
   }
   
   function getRecent(){
+    if(gettingRecent) return;
+    gettingRecent = true;
     return fetch('recent.php')
       .then((response) => response.json())
-      .then((data) => {
-        updateRecentlyPlayed(data.data);
-        recentlyPlayedPagination = data.pagination;
+      .then((response) => {
+        updateRecentlyPlayed(response.data);
+        recentlyPlayedPagination = response.pagination;
+        gettingRecent = false;
+        // get recent every 20 seconds for buffer
+        // not ideal but since we don't have song length and current length of now playing we have to poll
+        setTimeout(function() {
+          getRecent();
+          getNowPlaying();
+        }, 20000);
+      }).catch(error => {
+        gettingRecent = false;
+        console.error(error);
       });
   }
   
