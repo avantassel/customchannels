@@ -123,7 +123,10 @@
       $('#'+customChannels.nowPlaying.id+' i.sample').addClass('red').addClass('stop').removeClass('play');
     }
       
-    $(nowplaying).find('.source').html(customChannels.source);
+    if(customChannels.source == 'stream')
+      $(nowplaying).find('.source').html('<label class="ui blue label">Stream</label>');
+    else
+      $(nowplaying).find('.source').html('<label class="ui green label">Sample</label>');
     $(nowplaying).removeClass('blur');
     $(nowplaying).find('#artist').html(customChannels.nowPlaying.artist);
     $(nowplaying).find('#title').html(customChannels.nowPlaying.title);
@@ -132,7 +135,7 @@
       $(nowplaying).find('#image').prop('src', customChannels.nowPlaying.album_art.small).show();    
     else
       $(nowplaying).find('#image').hide();
-    let message = customChannels.source == 'sample' ? '<label class="ui green label">Sample</label>' : '<label class="ui blue label">Live</label>';    
+    let message = customChannels.source == 'sample' ? '<label class="ui green label">Sample</label>' : '<label class="ui blue label">Stream</label>';    
     
     if(customChannels.state != 'paused' && customChannels.nowPlaying.title && !customChannels.nowPlaying.notified){
       $('body').toast({
