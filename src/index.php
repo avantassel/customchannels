@@ -187,10 +187,14 @@
         </div>';
   }
   
-  function updateRecent(){
+  function updateRecent(init){
     customChannels.getRecent()
-    .then(customChannels.getNowPlaying)
     .then(updateRecentlyPlayed)
+    .then(() => {
+      if(!init)
+        return customChannels.getNowPlaying();
+      return true;
+    })
     .then(() => {
       setTimeout(updateNowPlaying, 400);
     });
@@ -210,7 +214,7 @@
     });
   }
   
-  updateRecent();
+  updateRecent(true);
 </script>
 </body>
 </html>

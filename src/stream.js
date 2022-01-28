@@ -35,10 +35,11 @@ class CustomChannels {
       this.source = 'stream';
       this.audio.setAttribute('src', CustomChannels.urls.stream);
       this.audio.play();
+      return this.getNowPlaying(); 
     } else {
       this.audio.pause();
     }
-    return this.getNowPlaying(); 
+    return Promise.resolve(true);
   }
   
   playSample = (id) => {
