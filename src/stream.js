@@ -84,9 +84,7 @@ class CustomChannels {
           if(!recent.length)
             recent = this.recentlyPlayed.filter(r => r.artist == artist);
           if (recent.length && recent[0].id != this.nowPlaying.id) {
-            this.nowPlaying = {
-              ...recent[0]
-            };
+            this.nowPlaying = recent[0];
           }
         }
       }
