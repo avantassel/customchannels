@@ -1,6 +1,7 @@
 <html>
   <head>
     <title>Custom Channels Player</title>
+    <link rel="stylesheet" href="styles.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fomantic-ui/2.8.8/semantic.min.css" integrity="sha512-pbLYRiE96XJxmJgF8oWBfa9MdKwuXhlV7vgs2LLlapHLXceztfcta0bdeOgA4reIf0WH67ThWzA684JwkM3zfQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Glide.js/3.5.0/css/glide.core.css" integrity="sha512-kcsVKF2zQWxpZox0QJTl40HBAhKLjfcUFw2LoTdHilSuHeOSg8uo8zf6ZiIUSHgHHl0H8zRkMcqJz2w4ZH57KA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
   </head>
@@ -18,16 +19,16 @@
       <div class="column">
         <div class="ui icon header inverted">
         <i class="music icon"></i> Custom Channels Player <br/><br/>      
-        <audio id="player" controls src="https://stream.customchannels.net/dev_test_96.mp3" type="audio/mpeg">
+        <audio id="player" controls src="" type="audio/mpeg">
           Your browser does not support the
           <code>audio</code> element.
         </audio>      
       </div>
-      <div id="mainPlayBtn" class="ui primary button inverted" onclick="playStream(this, 'https://stream.customchannels.net/dev_test_96.mp3');">Play Stream</div>  
+      <div id="mainPlayBtn" class="ui primary button inverted" onclick="playStream();">Play Stream</div>  
   </div>
   <div class="column">
   <!-- Now Playing -->
-  <div id="nowplaying" class="ui centered card inverted">
+  <div id="nowplaying" class="ui centered card inverted">    
     <div class="content">
       <div class="header inverted">Now Playing</div>
     </div>
@@ -39,7 +40,12 @@
       </div>
       <div id="album" class="description" style="text-align: left">        
       </div>
-    </div>      
+    </div>   
+    <div class="extra content">
+      <span class="right floated source">
+        Stream
+      </span>      
+    </div>   
   </div>
   </div>
 </div>
@@ -49,54 +55,45 @@
 <div id="recent" class="ui four link stackable cards inverted">  
 </div>
 
+<script src="stream.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/fomantic-ui/2.8.8/semantic.min.js" integrity="sha512-t5mAtfZZmR2gl5LK7WEkJoyHCfyzoy10MlerMGhxsXl3J7uSSNTAW6FK/wvGBC8ua9AFazwMaC0LxsMTMiM5gg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>    
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js" integrity="sha512-qTXRIMyZIFb8iQcfjXWCO8+M5Tbc38Qi5WzdPOYZHIlZpzBHG3L3by84BBBOiRGiEb7KKtAOAs5qYdUiZiQNNQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
 <script>
-  const audio = document.getElementById('player');
-  let recentlyPlayed = [];
-  let recentlyPlayedPagination = {};
   let darkMode = true;
-  let gettingRecent = false;
-  let nowPlaying = {
-    sample: false    
-  };
+  const audio = document.getElementById('player');
+  const recent = document.getElementById('recent');
+  const nowplaying = document.getElementById('nowplaying');
+  const customChannels = new CustomChannels(audio);
+  
   audio.addEventListener('ended', (event) => {
-    if(nowPlaying.sample){          
-      clearPlayButtons();
-      let nextSample = $('#'+nowPlaying.id).next().find('.sample');
-      if(nextSample)
-        nextSample.click();
+    if(customChannels.source == 'sample'){
+      customChannels.playNextSample()
+      .then(() => {
+        setTimeout(updateNowPlaying, 200);
+      });
     }
   });
-  audio.addEventListener('pause', (event) => {
-    clearPlayButtons();    
-    if(!nowPlaying.sample)
-      $('#mainPlayBtn').html( $('#mainPlayBtn').html().replace('Pause','Play') );        
-  });  
-  audio.addEventListener('play', (event) => {
-    if(!nowPlaying.sample)
-      $('#mainPlayBtn').html( $('#mainPlayBtn').html().replace('Play','Pause') );    
+  
+  $(document).ready(() => {
+    $('.ui.sticky').sticky();
+    $('.button').popup();
   });
-  
-  $('.ui.sticky').sticky();
-  
-  $('.button').popup();
   
   function toggleMode(ele){
     darkMode = !darkMode;
     if(darkMode){
+      $(recent).addClass('inverted');
+      $(nowplaying).addClass('inverted');
       $('.button').addClass('inverted');
-      $('#recent').addClass('inverted');
-      $('#nowplaying').addClass('inverted');
       $('.segment').addClass('inverted');
       $('.header').addClass('inverted');
       $('body').addClass('inverted');
     } else {
+      $(recent).removeClass('inverted');
+      $(nowplaying).removeClass('inverted');
       $('.button').removeClass('inverted');
-      $('#recent').removeClass('inverted');
-      $('#nowplaying').removeClass('inverted');
       $('.segment').removeClass('inverted');
       $('.header').removeClass('inverted');
       $('body').removeClass('inverted');
@@ -107,126 +104,64 @@
     $('.sample').removeClass('red').removeClass('stop').addClass('play');
   }
   
-  function getNowPlaying(){
-    fetch('https://lambda.customchannels.rocks/nowplaying?url=http://stream.customchannels.net/dev_test_96.mp3')
-      .then((response) => response.json())
-      .then((data) => {
-        if(data.track){
-          // parse track data
-          let track = data.track.split('-');
-          if(!nowPlaying.artist || (nowPlaying.artist != track[0].trim() && nowPlaying.title != track[1].trim())){
-            // don't update if we are playing samples
-            if(nowPlaying.sample && !audio.paused)
-              return;
-            nowPlaying = {
-              id: '',
-              artist: track[0].trim(),
-              title: track[1].trim(),
-              album: '',
-            };  
-          }
-          updateNowPlaying(false);            
-        }
-      });  
-  }
-  
-  function playStream(ele, url){
-    clearPlayButtons();    
-    if(audio.paused || nowPlaying.sample){          
-      $('#player').prop('src', url);
-      audio.play();          
-      nowPlaying.sample = false;    
-      getNowPlaying();        
-    } else {
-      audio.pause();
-      $('body').toast({
-        message: `<label class="ui blue label">Live</label> Pausing stream`,
-        class: darkMode ? 'inverted' : ''
-      }); 
-    }        
-  }
-  
-  function playSample(ele, id){
-    let recent = recentlyPlayed.filter(r => r.id == id);
-    if($(ele).hasClass('red') && !audio.paused){          
-      $('.sample').removeClass('red').removeClass('stop').addClass('play');
-      audio.pause();        
-    } else if(recent.length){
-      nowPlaying = {
-        ...recent[0]
-      };
-      $('.sample').removeClass('red').removeClass('stop').addClass('play');
-      $(ele).addClass('red').removeClass('play').addClass('stop');
-      $('#player').prop('src', nowPlaying.sample_url);        
-      audio.play();      
-      $('#mainPlayBtn').html('Play Stream');          
-      updateNowPlaying(true);
-    }
-  }
-  
-  function updateNowPlaying(sample){
-    if(audio.paused){
-      $('#nowplaying #artist').html('');
-      $('#nowplaying #title').html('');
-      $('#nowplaying #album').html('');
-      $('#nowplaying #image').hide();
+  function updateNowPlaying(){
+    $('i.sample').removeClass('red').removeClass('stop').addClass('play');
+    if(customChannels.state == 'paused'){
+      $(nowplaying).addClass('blur');  
+      $('#mainPlayBtn').html('Play Stream');
+      $(nowplaying).find('#title').html('Click Play Stream or sample with the play icon.');
+      $(nowplaying).find('#artist').html('');
+      $(nowplaying).find('#album').html('');
+      $(nowplaying).find('#image').hide();
       return;
     }
-    if(nowPlaying.title){
-      $('#nowplaying').addClass('loading');
-    }
     
-    let showToast = true;
-    nowPlaying.sample = sample;
+    if(customChannels.source == 'stream')
+      $('#mainPlayBtn').html('Pause Stream');
+    else {
+      $('#mainPlayBtn').html('Play Stream');
+      $('#'+customChannels.nowPlaying.id+' i.sample').addClass('red').addClass('stop').removeClass('play');
+    }
       
-    // search for artist in recent list
-    if(!nowPlaying.id && nowPlaying.title && nowPlaying.artist){
-      let recent = recentlyPlayed.filter(r => r.title == nowPlaying.title && r.artist == nowPlaying.artist);
-      if(!recent.length)
-        recent = recentlyPlayed.filter(r => r.title == nowPlaying.title);
-      if(!recent.length)
-        recent = recentlyPlayed.filter(r => r.artist == nowPlaying.artist);
-        
-      if(recent.length){
-        if(nowPlaying.id != recent[0].id){
-          nowPlaying = {
-            sample,
-            ...recent[0]
-          };  
-        } else {
-          return;
-        }
-      }
-    }
-    $('#nowplaying #artist').html(nowPlaying.artist);
-    $('#nowplaying #title').html(nowPlaying.title);
-    $('#nowplaying #album').html(nowPlaying.album);
-    if(nowPlaying.album_art && nowPlaying.album_art.small)
-      $('#nowplaying #image').prop('src', nowPlaying.album_art.small).show();    
+    $(nowplaying).find('.source').html(customChannels.source);
+    $(nowplaying).removeClass('blur');
+    $(nowplaying).find('#artist').html(customChannels.nowPlaying.artist);
+    $(nowplaying).find('#title').html(customChannels.nowPlaying.title);
+    $(nowplaying).find('#album').html(customChannels.nowPlaying.album);
+    if(customChannels.nowPlaying.album_art && customChannels.nowPlaying.album_art.small)
+      $(nowplaying).find('#image').prop('src', customChannels.nowPlaying.album_art.small).show();    
     else
-      $('#nowplaying #image').hide();
-    let message = sample ? '<label class="ui green label">Sample</label>' : '<label class="ui blue label">Live</label>';    
-    if(showToast && nowPlaying.title){
+      $(nowplaying).find('#image').hide();
+    let message = customChannels.source == 'sample' ? '<label class="ui green label">Sample</label>' : '<label class="ui blue label">Live</label>';    
+    
+    if(customChannels.state != 'paused' && customChannels.nowPlaying.title && !customChannels.nowPlaying.notified){
       $('body').toast({
-        message: `${message} Playing ${nowPlaying.title} by ${nowPlaying.artist}`,
+        message: `${message} Playing ${customChannels.nowPlaying.title} by ${customChannels.nowPlaying.artist}`,
         class: darkMode ? 'inverted' : ''
-      });          
+      });       
+      customChannels.setNotified();   
     }
-    $('#nowplaying').removeClass('loading');
+    $(nowplaying).removeClass('loading');
   }
   
-  function updateRecentlyPlayed(data){
-    let init = !recentlyPlayed.length;
-    data.map(d => {
-      if(!$('#recent #'+d.id).length){
-        recentlyPlayed.push(d);
+  function updateRecentlyPlayed(){
+    let init = !$(recent).children().length;
+    customChannels.recentlyPlayed.map(d => {
+      if(!$(recent).find('#'+d.id).length){
         if(init)
-          $('#recent').append(cardHtml(d));
+          $(recent).append(cardHtml(d));
         else
-          $('#recent').prepend(cardHtml(d));
+          $(recent).prepend(cardHtml(d));
       }
     });
     $('.dimmer').hide();
+    
+    // get recent every 20 seconds for buffer
+    // not ideal but since we don't have song length and current length of now playing we have to poll
+    setTimeout(() => {
+      updateRecent();
+    }, 20000);
+    return true;
   }
   
   function cardHtml(recent){
@@ -237,7 +172,7 @@
           <div class="content">\
             <div class="header">'+recent.artist+'</div>\
             <div class="meta">\
-              '+recent.title+' <i class="play circle icon large sample" onclick="playSample(this, '+recent.id+')"></i>\
+              '+recent.title+' <i class="play circle icon large sample" onclick="playSample('+recent.id+')"></i>\
             </div>\
             <div class="description">'+recent.album+'</div>\
           </div>\
@@ -252,28 +187,30 @@
         </div>';
   }
   
-  function getRecent(){
-    if(gettingRecent) return;
-    gettingRecent = true;
-    return fetch('recent.php')
-      .then((response) => response.json())
-      .then((response) => {
-        updateRecentlyPlayed(response.data);
-        recentlyPlayedPagination = response.pagination;
-        gettingRecent = false;
-        // get recent every 20 seconds for buffer
-        // not ideal but since we don't have song length and current length of now playing we have to poll
-        setTimeout(function() {
-          getRecent();
-          getNowPlaying();
-        }, 20000);
-      }).catch(error => {
-        gettingRecent = false;
-        console.error(error);
-      });
+  function updateRecent(){
+    customChannels.getRecent()
+    .then(customChannels.getNowPlaying)
+    .then(updateRecentlyPlayed)
+    .then(() => {
+      setTimeout(updateNowPlaying, 200);
+    });
   }
   
-  getRecent();
+  function playStream(){
+    customChannels.playStream()
+    .then(() => {
+      setTimeout(updateNowPlaying, 200);
+    });
+  }
+  
+  function playSample(id){
+    customChannels.playSample(id)
+    .then(() => {
+      setTimeout(updateNowPlaying, 200);
+    });
+  }
+  
+  updateRecent();
 </script>
 </body>
 </html>
