@@ -7,14 +7,14 @@
   </head>
   <body class="inverted">
     
-  <div class="ui placeholder stacked segment sticky inverted">   
+  <div class="ui placeholder segment sticky inverted">   
   <button class="ui icon button inverted" onclick="toggleMode();" data-content="Toggle Dark Mode">
-    <i class="adjust icon large"></i>
+    <i class="adjust icon big"></i>
   </button>
   <div class="ui active dimmer">
     <div class="ui text loader">Loading</div>
   </div>
-  <div class="ui two column center aligned grid">  
+  <div class="ui two column stackable center aligned grid">  
     <div class="middle aligned row">
       <div class="column">
         <div class="ui icon header inverted">
@@ -52,7 +52,7 @@
 </div>
 </div>
 
-<div id="recent" class="ui four link stackable cards inverted">  
+<div id="recent" class="ui four link doubling cards inverted">  
 </div>
 
 <script src="stream.js"></script>
@@ -165,7 +165,7 @@
   }
   
   function cardHtml(recent){
-    return '<div id="'+recent.id+'" class="card">\
+    return '<div id="'+recent.id+'" class="card" onclick="playSample('+recent.id+')">\
           <div class="image">\
             <img src="'+recent.album_art.large+'">\
           </div>\
