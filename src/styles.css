@@ -1,3 +1,7 @@
+body.inverted {
+  background: #222;
+}
+
 #nowplaying.blur {
   opacity: 0.3;
 }
