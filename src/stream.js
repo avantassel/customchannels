@@ -57,7 +57,6 @@ class CustomChannels {
   }
   
   playNextSample = () => {
-    this.audio.pause();
     const index = this.recentlyPlayed.findIndex(r => r.id == this.nowPlaying.id);
     if (this.recentlyPlayed[index + 1]) {
       return this.playSample(this.recentlyPlayed[index + 1].id);

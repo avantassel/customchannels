@@ -71,7 +71,7 @@
     if(customChannels.source == 'sample'){
       customChannels.playNextSample()
       .then(() => {
-        setTimeout(updateNowPlaying, 200);
+        setTimeout(updateNowPlaying, 400);
       });
     }
   });
@@ -192,21 +192,21 @@
     .then(customChannels.getNowPlaying)
     .then(updateRecentlyPlayed)
     .then(() => {
-      setTimeout(updateNowPlaying, 200);
+      setTimeout(updateNowPlaying, 400);
     });
   }
   
   function playStream(){
     customChannels.playStream()
     .then(() => {
-      setTimeout(updateNowPlaying, 200);
+      setTimeout(updateNowPlaying, 400);
     });
   }
   
   function playSample(id){
     customChannels.playSample(id)
     .then(() => {
-      setTimeout(updateNowPlaying, 200);
+      setTimeout(updateNowPlaying, 400);
     });
   }
   
