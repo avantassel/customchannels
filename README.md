@@ -62,7 +62,7 @@ https://lambda.customchannels.rocks/nowplaying?url=http://stream.customchannels.
 **Recently Played Metadata:**
 https://ensemble.customchannels.net/api/channels/222/recent
 
-> Application details below.
+> Application details below.  I didn't get into infinite scroll or pagination, I would need the variables on the recently played endpoint.  Version 2 update could have infinite scroll on recently played, and be able to favorite or star songs.  I initially built [index-mvp](index-mvp.php) to get things working and then refactored the JS into a class [stream.js](stream.js) to clean things up. 
 
 - Code: https://github.com/avantassel/customchannels
 - App: https://www.andrewvantassel.com/customchannels

@@ -1,6 +1,3 @@
-/*
-  
-*/
 class CustomChannels {
   
   static urls = {
